@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+service Communicator {
+  // Request to start a conversation
+  rpc InitiateConversation (ConversationControlRequest) returns (ConversationControlReply);
+  // Request to en a conversation
+  rpc TerminateConversation (ConversationControlRequest) returns (ConversationControlReply);
+  // Add a message to the given conversation
+  rpc SendMessage (MessageRequest) returns (MessageResponse);
+  // Refresh the current conversation
+  rpc UpdateConversation (UpdateRequest) returns (UpdateResponse);
+}
+
+message ConversationControlRequest {
+  Address address = 1;
+  // HACK Maybe the name of the user to connect to
+  string receipient = 2;
+}
+
+message ConversationControlReply {
+  bool success = 1;
+  uint32 conversationId = 2;
+}
+
+message MessageRequest {
+  Address address = 1;
+  // Message to add to the conversation
+  string message = 2;
+  uint32 conversationId = 3;
+}
+
+message MessageResponse {
+  bool success = 1;
+  // Perhaps they have gone out of sync
+  // TODO May not be relevant, depends on how users keep up to date
+  bool requireUpdate = 2;
+}
+
+message UpdateRequest {
+  Address address = 1;
+  uint32 conversationId = 2;
+}
+
+message UpdateResponse {
+  bool success = 1;
+  repeated string messages = 2;
+}
+
+// Will define this separately incase we get a better way to identify
+// Address of the requestor
+message Address {
+  // Just perhaps the ip address
+  string address = 1;
+}
