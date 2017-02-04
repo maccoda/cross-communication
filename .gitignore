@@ -2,10 +2,11 @@ target
 Cargo.lock
 
 # No generated code
-chat-client/src/message.rs
-chat-client/src/message_grpc.rs
+# FIXME Going to allow them so can get CI set up easy
+#chat-client/src/message.rs
+#chat-client/src/message_grpc.rs
 
-chat-server/src/message.rs
-chat-server/src/message_grpc.rs
+#chat-server/src/message.rs
+#chat-server/src/message_grpc.rs
 
-proto
+#proto
