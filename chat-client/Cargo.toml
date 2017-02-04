@@ -1,0 +1,6 @@
+[package]
+name = "chat-client"
+version = "0.1.0"
+authors = ["Dylan Maccora <maccora17@gmail.com>"]
+
+[dependencies]
