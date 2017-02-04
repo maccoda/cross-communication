@@ -1,0 +1,12 @@
+[package]
+name = "cross_communication"
+version = "0.1.0"
+authors = ["Dylan Maccora <maccora17@gmail.com>"]
+
+[dependencies]
+
+[workspace]
+members = [
+  "chat-client",
+  "chat-server"
+]
