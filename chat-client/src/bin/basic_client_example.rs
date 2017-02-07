@@ -6,8 +6,6 @@ use chat_client::message_grpc::*;
 
 
 fn main() {
-    println!("Hello, world!");
-
     // Make the client from the generated code
     let client = CommunicatorClient::new("localhost", 50051, false).unwrap();
 
