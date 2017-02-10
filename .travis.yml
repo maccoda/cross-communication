@@ -1,4 +1,17 @@
+env:
+    - PROTOBUF_VERS="3.2.0"
+
 language: rust
 rust:
     - stable
+    - beta
     - nightly
+
+before_install:
+    - ./install_protobuf.sh
+    - PATH=$(pwd)/bin:/home/travis/.cargo/bin:$PATH protoc --version
+    - PATH=$(pwd)/bin:/home/travis/.cargo/bin:$PATH ./gen_rust.sh
+
+script:
+    - cargo build --all --verbose
+    - cargo test --all --verbose
