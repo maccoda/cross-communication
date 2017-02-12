@@ -1,12 +1,16 @@
 #/bin/bash
-
+set -ex
 # Generate the rust files associated with the protocol buffers located
 # in the directory *proto*
 # First parameter is the destination directory of the generated files
 if [[ -z $1 ]]; then
   dest_dir="."
 fi
-proto_dir="proto"
+proto_dir="comms-spec"
+
+# Update the submodule (will go to master)
+git submodule sync --recursive
+git submodule update --init --recursive
 
 protoc --rust_out=$dest_dir $proto_dir/message.proto
 protoc --rust-grpc_out=$dest_dir $proto_dir/message.proto
