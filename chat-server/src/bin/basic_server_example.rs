@@ -33,63 +33,57 @@ impl CommunicatorImpl {
         CommunicatorImpl { conversations: vec![] }
     }
     fn get_next_id(&mut self, receipient: String) -> u32 {
-        let unused_id: Vec<&ConversationId> =
-            self.conversations.iter().filter(|x| !x.used).collect();
-        if unused_id.len() == 0 {
-            self.conversations.push(ConversationId {
-                id: self.conversations.len() as u32,
-                used: true,
-                receipient: receipient,
-            });
-            self.conversations.len() as u32
-        } else {
-            unused_id[0].used = true;
-            unused_id[0].id
-        }
+        // let unused_id: Vec<&ConversationId> =
+        //     self.conversations.iter().filter(|x| !x.used).collect();
+        // if unused_id.len() == 0 {
+        //     self.conversations.push(ConversationId {
+        //         id: self.conversations.len() as u32,
+        //         used: true,
+        //         receipient: receipient,
+        //     });
+        //     self.conversations.len() as u32
+        // } else {
+        //     unused_id[0].used = true;
+        //     unused_id[0].id
+        // }
+        0
     }
 }
 
 impl Communicator for CommunicatorImpl {
-    fn InitiateConversation(&self,
-                            req: ConversationControlRequest)
-                            -> GrpcResult<ConversationControlReply> {
-        let mut reply = ConversationControlReply::new();
+    fn InitiateConversation(&self, req: InitiateRequest) -> GrpcResult<InitiateReply> {
+        let mut reply = InitiateReply::new();
         println!("Received an initiate command from {:?}", req.get_address());
         println!("They wish to connect with {:?}", req.get_receipient());
-        reply.set_conversationId(self.get_next_id(req.get_receipient().to_owned()));
+        // reply.set_conversationId(self.get_next_id(req.get_receipient().get_name().to_owned()));
         println!("Giving a conversation id of {:?}",
                  reply.get_conversationId());
         reply.set_success(true);
         Ok(reply)
     }
 
-    fn TerminateConversation(&self,
-                             req: ConversationControlRequest)
-                             -> GrpcResult<ConversationControlReply> {
-        let mut reply = ConversationControlReply::new();
+    fn TerminateConversation(&self, req: TerminateRequest) -> GrpcResult<TerminateReply> {
+        let mut reply = TerminateReply::new();
         println!("Received a terminate command from {:?}", req.get_address());
-        println!("They wish to end their conversation with {:?}",
-                 req.get_receipient());
+        let req_id = req.get_conversationID();
+        println!("They wish to end their conversation with {:?}", req_id);
         // First check that the conversation can be ended
-        let matches =
-            self.conversations.iter().filter(|x| x.eq(req.get_conversationId())).collect();
-        if matches != 1 {
-            Err(grpc::error::GrpcError::Other(&format!("Conversation not yet open. Incorrect \
-                                                       conversation ID {:?}.",
-                                                       req.get_conversationId())))
+        let matches: Vec<&ConversationId> =
+            self.conversations.iter().filter(|x| x.id == req_id).collect();
+        if matches.len() != 1 {
+            Err(grpc::error::GrpcError::Other("Conversation not yet open. Incorrect \
+                                                       conversation ID"))
         } else {
-            matches[0].clear();
+            // matches[0].clear();
             Ok(reply)
         }
 
     }
-
-    fn SendMessage(&self, req: MessageRequest) -> GrpcResult<MessageResponse> {
-        Ok(MessageResponse::new())
-    }
-
-    fn UpdateConversation(&self, req: UpdateRequest) -> ::grpc::result::GrpcResult<UpdateResponse> {
-        Ok(UpdateResponse::new())
+    fn SendMessage(&self,
+                   reqs: grpc::iter::GrpcIterator<MessageRequest>)
+                   -> grpc::iter::GrpcIterator<MessageReply> {
+        // TODO Unsure of how to make mock of the iterator
+        Box::new(vec![Ok(MessageReply::new())].into_iter())
     }
 }
 #[allow(unused_variables)]
