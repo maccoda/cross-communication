@@ -2,7 +2,7 @@
 name = "cross_communication"
 version = "0.1.0"
 authors = ["Dylan Maccora <maccora17@gmail.com>"]
-# build = "gen_proto.sh" 
+build = "build.rs"
 
 [dependencies]
 

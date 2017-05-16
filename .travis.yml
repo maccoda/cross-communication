@@ -9,8 +9,8 @@ rust:
 
 before_install:
     - ./install_protobuf.sh
-    - PATH=$(pwd)/bin:/home/travis/.cargo/bin:$PATH protoc --version
-    - PATH=$(pwd)/bin:/home/travis/.cargo/bin:$PATH ./gen_rust.sh
+    - export PATH=$(pwd)/bin:/home/travis/.cargo/bin:$PATH
+    - protoc --version
 
 script:
     - cargo build --all --verbose
