@@ -1,10 +1,13 @@
 extern crate chat_server;
 extern crate grpc;
+extern crate futures;
+extern crate futures_cpupool;
 
 use std::thread;
 
-use grpc::result::GrpcResult;
-use grpc::error::GrpcError;
+use futures_cpupool::CpuPool;
+
+use grpc::{SingleResponse, StreamingResponse, StreamingRequest};
 
 use chat_server::message_grpc::*;
 use chat_server::message::*;
@@ -51,7 +54,7 @@ impl CommunicatorImpl {
 }
 
 impl Communicator for CommunicatorImpl {
-    fn InitiateConversation(&self, req: InitiateRequest) -> GrpcResult<InitiateReply> {
+    fn initiate_conversation(&self, options: ::grpc::RequestOptions, req: InitiateRequest) -> SingleResponse<InitiateReply> {
         let mut reply = InitiateReply::new();
         println!("Received an initiate command from {:?}", req.get_address());
         println!("They wish to connect with {:?}", req.get_receipient());
@@ -59,10 +62,10 @@ impl Communicator for CommunicatorImpl {
         println!("Giving a conversation id of {:?}",
                  reply.get_conversationId());
         reply.set_success(true);
-        Ok(reply)
+        SingleResponse::completed(reply)
     }
 
-    fn TerminateConversation(&self, req: TerminateRequest) -> GrpcResult<TerminateReply> {
+    fn terminate_conversation(&self, options: ::grpc::RequestOptions, req: TerminateRequest) -> SingleResponse<TerminateReply> {
         let mut reply = TerminateReply::new();
         println!("Received a terminate command from {:?}", req.get_address());
         let req_id = req.get_conversationID();
@@ -71,25 +74,25 @@ impl Communicator for CommunicatorImpl {
         let matches: Vec<&ConversationId> =
             self.conversations.iter().filter(|x| x.id == req_id).collect();
         if matches.len() != 1 {
-            Err(grpc::error::GrpcError::Other("Conversation not yet open. Incorrect \
+            SingleResponse::err(grpc::error::Error::Other("Conversation not yet open. Incorrect \
                                                        conversation ID"))
         } else {
             // matches[0].clear();
-            Ok(reply)
+            SingleResponse::completed(reply)
         }
 
     }
-    fn SendMessage(&self,
-                   reqs: grpc::iter::GrpcIterator<MessageRequest>)
-                   -> grpc::iter::GrpcIterator<MessageReply> {
-        // TODO Unsure of how to make mock of the iterator
-        Box::new(vec![Ok(MessageReply::new())].into_iter())
+    fn send_message(&self, options: ::grpc::RequestOptions,
+                   reqs: StreamingRequest<MessageRequest>)
+                   -> StreamingResponse<MessageReply> {
+        // FIXME Unsure of how to make mock of the iterator
+        StreamingResponse::completed(vec![MessageReply::new()])
     }
 }
 #[allow(unused_variables)]
 fn main() {
     // Create the server, need unused variable so doesn't get disposed of
-    let server = CommunicatorServer::new("[::]:50051", CommunicatorImpl::new());
+    let server = CommunicatorServer::new_pool("[::]:50051", Default::default(), CommunicatorImpl::new(), CpuPool::new(4));
     loop {
         thread::park();
     }
