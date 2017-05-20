@@ -2,5 +2,10 @@
 name = "chat-server"
 version = "0.1.0"
 authors = ["Dylan Maccora <maccora17@gmail.com>"]
+build = "../build.rs"
 
 [dependencies]
+grpc = "0.*"
+protobuf = "1.*"
+futures = "0.1"
+futures-cpupool = "0.1"

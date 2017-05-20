@@ -1,0 +1,3 @@
+[submodule "comms-spec"]
+	path = comms-spec
+	url = https://github.com/maccoda/comms-spec.git

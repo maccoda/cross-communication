@@ -7,5 +7,3 @@ chat-client/src/message_grpc.rs
 
 chat-server/src/message.rs
 chat-server/src/message_grpc.rs
-
-proto
