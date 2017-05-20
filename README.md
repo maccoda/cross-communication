@@ -5,5 +5,10 @@
 Communicator project to be built to allow for clients to written in everyones
 pet language.
 
+Initial idea is to make a room-based chat were the client request the room they
+want to join and all messages are shared with this room. Will need to work out
+if want the server to have allowed rooms or the clients are able to create rooms
+themselves. To start off with will just have a set list defined on the server.
+
 This is using the specification found
 [here](https://gitlab.com/maccoda/comms-spec)
