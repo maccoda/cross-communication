@@ -23,10 +23,9 @@ install:
   - cargo -V
 
 build: false
-
-test_script:
-  - cargo build --all --verbose
-  - cargo test --all --verbose
+# NOTE Not downloading the protobuf compiler yet so not going to be run yet.
+# test_script:
+  # - cargo test --all --verbose
   # - cargo build --release --bin made-up
 
 # artifacts:
