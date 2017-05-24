@@ -2,7 +2,7 @@
 
 use std::process::Command;
 fn main() {
-    let workspaces = vec!["chat-client", "chat-server"];
+    let workspaces = vec!["client", "server"];
     Command::new("git")
         .arg("submodule")
         .arg("sync")

@@ -2,7 +2,6 @@
 name = "chat-client"
 version = "0.1.0"
 authors = ["Dylan Maccora <maccora17@gmail.com>"]
-build = "../build.rs"
 
 [dependencies]
 grpc = "0.*"
