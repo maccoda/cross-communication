@@ -11,12 +11,15 @@ extern crate grpc;
 extern crate futures;
 extern crate futures_cpupool;
 
+
+use std::collections::VecDeque;
+use std::ops::DerefMut;
+
 use grpc::{SingleResponse, StreamingResponse, StreamingRequest};
+use grpc::futures_grpc::{self, GrpcStreamSend};
 use futures_cpupool::CpuPool;
-
-use message_grpc::{Communicator, CommunicatorServer};
 use message::*;
-
+use message_grpc::{Communicator, CommunicatorServer};
 
 pub mod message;
 pub mod message_grpc;
@@ -111,7 +114,6 @@ impl Communicator for Server {
             SingleResponse::err(grpc::error::Error::Other("Conversation not yet open. Incorrect \
                                                        conversation ID"))
         } else {
-            // matches[0].clear();
             reply.set_success(true);
             SingleResponse::completed(reply)
         }
@@ -130,19 +132,36 @@ impl Communicator for Server {
                     options: ::grpc::RequestOptions,
                     reqs: StreamingRequest<MessageRequest>)
                     -> StreamingResponse<MessageReply> {
-        let mut msgs = vec![];
-        for i in 0..10 {
-            let mut reply = Message::new();
-            reply.set_content(format!("Message {}", i));
-            reply.set_user(make_address());
-            msgs.push(reply);
+        println!("Received a message stream opening request");
+        let mut msgs = MsgIter::new();
+        // First we should handle the input
+        let mut requests: GrpcStreamSend<MessageRequest> = reqs.0;
+        loop {
+            match requests.deref_mut().poll().unwrap() {
+                ::futures::Async::Ready(request) => {
+                    println!("{:?}", request);
+                    break;
+                }
+                ::futures::Async::NotReady => println!("Not ready"),
+            }
         }
+
+
+        // FIXME This was just for initial setup purposes
+        // let mut msgs = vec![];
+        // for i in 0..10 {
+        //     let mut reply = Message::new();
+        //     reply.set_content(format!("Message {}", i));
+        //     reply.set_user(make_address());
+        //     msgs.push(reply);
+        // }
         let mut reply = MessageReply::new();
-        reply.set_messages(::protobuf::RepeatedField::from_vec(msgs));
-        StreamingResponse::completed(vec![reply])
+        reply.set_messages(msgs.next().unwrap());
+        StreamingResponse::iter(vec![reply].into_iter())
     }
 }
 
+// FIXME This needs to go as soon as we can!
 fn make_address() -> Address {
     let mut addr = Address::new();
     addr.set_address("remote".to_owned());
@@ -150,21 +169,54 @@ fn make_address() -> Address {
 }
 
 /// Type for the *rooms* that the server uses.
-#[derive(PartialEq)]
-struct MsgRoom(message::Room);
+#[derive(Debug)]
+struct MsgRoom {
+    room: message::Room,
+    users: Vec<message::Address>,
+    messages: MsgIter,
+}
+
 
 impl MsgRoom {
     fn name(&self) -> &str {
-        self.0.get_name()
+        self.room.get_name()
     }
 
     fn from(name: &str) -> MsgRoom {
         let mut room = message::Room::new();
         room.set_name(name.to_owned());
-        MsgRoom(room)
+        MsgRoom {
+            room: room,
+            users: vec![],
+            messages: MsgIter::new(),
+        }
     }
 }
 
+#[derive(Debug)]
+struct MsgIter {
+    messages: VecDeque<message::Message>,
+}
+
+impl MsgIter {
+    fn new() -> MsgIter {
+        MsgIter { messages: VecDeque::new() }
+    }
+
+    fn add(&mut self, msg: message::Message) {
+        self.messages.push_back(msg);
+    }
+}
+
+impl Iterator for MsgIter {
+    type Item = message::Message;
+
+    // If no messages return None, if some, take it from the front. Essentially
+    // a queue so may be a better implementation
+    fn next(&mut self) -> Option<message::Message> {
+        self.messages.pop_front()
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -178,6 +230,16 @@ mod tests {
         let response = server
             .initiate_conversation(::grpc::RequestOptions::new(),
                                    test_utils::default_initiate())
+            .wait_drop_metadata()
+            .unwrap();
+        assert!(response.get_success());
+    }
+    #[test]
+    fn test_terminate_valid() {
+        let server = super::Server::new();
+        let response = server
+            .terminate_conversation(::grpc::RequestOptions::new(),
+                                    test_utils::default_terminate())
             .wait_drop_metadata()
             .unwrap();
         assert!(response.get_success());

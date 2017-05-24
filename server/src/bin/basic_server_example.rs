@@ -92,15 +92,11 @@ impl Communicator for CommunicatorImpl {
                     reqs: StreamingRequest<MessageRequest>)
                     -> StreamingResponse<MessageReply> {
         // FIXME Unsure of how to make mock of the iterator
-        let mut msgs = vec![];
-        for i in 0..10 {
-            let mut reply = Message::new();
-            reply.set_content(format!("Message {}", i));
-            reply.set_user(make_address());
-            msgs.push(reply);
-        }
+        let mut msg = Message::new();
+        msg.set_content("Message here".to_string());
+        msg.set_user(make_address());
         let mut reply = MessageReply::new();
-        reply.set_messages(::protobuf::RepeatedField::from_vec(msgs));
+        reply.set_messages(msg);
         StreamingResponse::completed(vec![reply])
     }
 }
